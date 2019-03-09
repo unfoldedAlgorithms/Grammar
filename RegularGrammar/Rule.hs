@@ -3,31 +3,53 @@ module Rule where
 import Token
 import Utility
 
+{-
+  Right-Regular Grammar rule types
+    * RuleEmpty    : Variable reduces to epsilon; 
+    * RuleTerminal : Variable reduces to Terminal; A -> aB
+    * RuleVariable : Variable reduces to Terminal and Variable
+-}
 data Rule
-  = RuleEmpty    Variable                   -- A -> a
-  | RuleTerminal Variable Terminal          -- A -> aB
-  | RuleContinue Variable Terminal Variable -- A -> e
+  = RuleEmpty    Variable                   -- v -> e
+  | RuleTerminal Variable Terminal          -- v -> t
+  | RuleVariable Variable Terminal Variable -- v -> t v'
   deriving (Show)
 
-{- returns Maybe:
-    * resulting terminal
-    * resulting variable
+{-
+  returns Maybe:
+    * Either
+      * resulting Terminal
+      * resulting Terminal and Variable
     * rest of (unparsed) input
 -}
 apply_rule ::
   Rule -> String ->
-  Maybe (Maybe Terminal, Maybe Variable, String)
+  Maybe (Either (Maybe Terminal) (Terminal, Variable), String)
 apply_rule rule input =
   case rule of
-    (RuleEmpty    x)     ->
-      case behead input x of
+    (RuleEmpty    v)     ->
+      case behead v input of
         Nothing   -> Nothing
-        Just rest -> Just (Just epsilon, Nothing, rest)
-    (RuleTerminal x a)   ->
-      case behead input x of
+        Just rest -> Just (Left Nothing, rest)
+    (RuleTerminal v t)   ->
+      case behead v input of
         Nothing   -> Nothing
-        Just rest -> Just (Just a, Nothing, rest)
-    (RuleContinue x a y) ->
-      case behead input x of
+        Just rest -> Just (Left $ Just t, rest)
+    (RuleVariable v t v') ->
+      case behead v input of
         Nothing   -> Nothing
-        Just rest -> Just (Just a, Just y, rest)
+        Just rest -> Just (Right (t, v'), rest)
+
+  -- case rule of
+  --   (RuleEmpty    v)     ->
+  --     case behead v input of
+  --       Nothing   -> Nothing
+  --       Just rest -> Just (Left Nothing, rest)
+  --   (RuleTerminal v t)   ->
+  --     case behead v input of
+  --       Nothing   -> Nothing
+  --       Just rest -> Just (Left $ Just t, rest)
+  --   (RuleVariable v t v') ->
+  --     case behead v input of
+  --       Nothing   -> Nothing
+  --       Just rest -> Just (Right (t, v'), rest)
