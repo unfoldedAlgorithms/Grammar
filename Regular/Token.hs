@@ -7,7 +7,7 @@ data Variable = S | V String
 
 instance Show Variable where
   show (S  ) = "S"
-  show (V s) = "<"++s++">"
+  show (V s) = s -- "<"++s++">"
 
 string_of (S  ) = "S"
 string_of (V s) = s

@@ -9,7 +9,7 @@ import Token
   s ::= initial grammar variable
   v ::= intermediate grammar variable (i.e. non-terminal)
   t ::= grammar terminal
-  e ::= epsilon (empty string)
+  ε ::= epsilon (empty string)
 
 -}
 
@@ -20,9 +20,9 @@ import Token
     pattern -> reduction
 
   Right-Regular Grammars have rules only of the following forms:
-    * p -> e  (Re)
-    * p -> t  (Rt)
-    * p -> tv (Rtv)
+    * p -> t
+    * p -> v
+    * p -> tv
 
 -}
 
@@ -39,14 +39,14 @@ variable_of (Pv v) = v
 {- Reduction ------------------------------------------------------------------}
 
 data Reduction
-  = Re
-  | Rt  Terminal
+  = Rt  Terminal
+  | Rv  Variable
   | Rtv Terminal Variable
 
 instance Show Reduction where
   show red = case red of
-    (Re)      -> "e"
     (Rt t)    -> show t
+    (Rv v)    -> show v
     (Rtv t v) -> show t ++ show v
 
 {- Rule -----------------------------------------------------------------------}
@@ -61,11 +61,11 @@ reduction_of (Rule (pat, red)) = red
 
 {- Rule Making ----------------------------------------------------------------}
 
-make_rule_v_e v = Rule (Pv (V v), Re)
-make_rule_s_e   = Rule (Pv (S  ), Re)
-
 make_rule_v_t (v, t) = Rule (Pv (V v), Rt (T t))
 make_rule_s_t (   t) = Rule (Pv (S  ), Rt (T t))
+
+make_rule_v_v (v, w) = Rule (Pv (V v), Rv (V w))
+make_rule_s_v (   w) = Rule (Pv (S  ), Rv (V w))
 
 make_rule_v_tv (v, t, w) = Rule (Pv (V v), Rtv (T t) (V w))
 make_rule_s_tv (   t, w) = Rule (Pv (S  ), Rtv (T t) (V w))
@@ -81,6 +81,6 @@ make_rule_s_tv (   t, w) = Rule (Pv (S  ), Rtv (T t) (V w))
 fold_rule :: Rule -> String -> Maybe String
 fold_rule rule input = let
   in case (reduction_of rule) of
-    (Re         ) -> Just  input
-    (Rt  (T t)  ) -> fmap id $ betail (t          ) input
+    (Rt  (T t)  ) -> fmap id $ betail (t               ) input
+    (Rv        v) -> fmap id $ betail (     string_of v) input
     (Rtv (T t) v) -> fmap id $ betail (t ++ string_of v) input
