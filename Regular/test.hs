@@ -3,23 +3,39 @@ import Rule
 import Parsing
 
 rules =
-  (map make_rule_e
-    [ "hello"
-    , "world"
+  -- v -> tw
+  (map make_rule_v_tv
+    [ ("phrase", "henry", "verb-phrase")
+    , ("phrase", "john",  "verb-phrase")
+    , ("verb-phrase", "hit",    "object-phrase")
+    , ("verb-phrase", "kicked", "object-phrase")
     ]) ++
-  (map make_rule_t
+  (map make_rule_s_tv
+    [ ("", "phrase")
+    ]) ++
+  -- v -> t
+  (map make_rule_v_t
+    [ ("object-phrase", "a ball")
+    , ("object-phrase", "the can")
+    ]) ++
+  (map make_rule_s_t
     [
     ]) ++
-  (map make_rule_tv
-    [ ("hello", "there", "World")
+  -- v -> e
+  (map make_rule_v_e
+    [
     ])
+  -- ++ make_rule_s_e  
 
-rules =
-  [ (Pv "hello" , Rtv "there" "world")
-  , (Pv "world" , Re)
-  , (Pv " "     , Re) ]
+input = "henry kicked the can"
 
-input = "Hello World"
 
-main = print $ parse rules input
+main = do
+  let result = parse rules input
+  putStrLn $ case result of
+    Nothing ->
+      "\"" ++ input ++ "\" is ill-formed"
+    Just rules ->
+      "\"" ++ input ++ "\" is well-formed:\n" ++
+      (foldl (\xs ys -> xs ++ "\n    " ++ ys) "" $ map show rules) ++ "\n"
 

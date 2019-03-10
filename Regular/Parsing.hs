@@ -11,22 +11,18 @@ import Rule
     Nothing
 -}
 parse :: [Rule] -> String -> Maybe [Rule]
-parse rules ""    = Just []
+parse rules "S"   = Just []
 parse rules input = let
 
-  apply_rules :: [Rule] -> String -> Maybe (Rule, String)
-  apply_rules [] _ = Nothing
-  apply_rules (r:rs) input =
-    case apply_rule r input of
-      Nothing   -> apply_rules rs input
+  fold_rules :: [Rule] -> String -> Maybe (Rule, String)
+  fold_rules [] _ = Nothing
+  fold_rules (r:rs) input =
+    case fold_rule r input of
+      Nothing   -> fold_rules rs input
       Just rest -> Just (r, rest)
   
-  in case apply_rules rules input of
+  in case fold_rules rules input of
     Nothing -> Nothing
     Just (rule, rest) -> let
-      pv = variable_of . pattern_of $ rule
-      rest' = case (reduction_of rule) of
-        (Re)      -> rest
-        (Rt t)    -> rest
-        (Rtv t v) -> v ++ rest
+      rest' = rest ++ (string_of . variable_of . pattern_of $ rule)
       in fmap ((:) rule) $ parse rules rest'
